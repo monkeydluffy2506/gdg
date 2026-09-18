@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GDG // NSUT — Society OS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ================= TOKENS ================= */
+:root{
+  --bg:#07070707;
+  --bg:#070707;
+  --bg-elevated:#0d0d0d;
+  --surface-glass: rgba(255,255,255,0.045);
+  --surface-glass-strong: rgba(255,255,255,0.07);
+  --border-glass: rgba(255,255,255,0.09);
+  --border-glass-strong: rgba(255,255,255,0.16);
+  --text:#f4f3f1;
+  --text-dim: rgba(244,243,241,0.62);
+  --text-faint: rgba(244,243,241,0.38);
+  --red:#c81e3a;
+  --red-bright:#ef3352;
+  --red-glow: rgba(200,30,58,0.35);
+  --shadow: 0 20px 60px rgba(0,0,0,0.5);
+  --radius-lg: 20px;
+  --radius-md: 14px;
+  --radius-sm: 9px;
+  --ease: cubic-bezier(.16,.8,.3,1);
+  color-scheme: dark;
+}
+:root[data-theme="light"]{
+  --bg:#f7f6f4;
+  --bg-elevated:#ffffff;
+  --surface-glass: rgba(10,8,8,0.035);
+  --surface-glass-strong: rgba(10,8,8,0.06);
+  --border-glass: rgba(10,8,8,0.09);
+  --border-glass-strong: rgba(10,8,8,0.16);
+  --text:#111010;
+  --text-dim: rgba(17,16,16,0.62);
+  --text-faint: rgba(17,16,16,0.4);
+  --red:#b3122e;
+  --red-bright:#d81b41;
+  --red-glow: rgba(179,18,46,0.22);
+  --shadow: 0 20px 60px rgba(20,15,15,0.12);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --bg:#f7f6f4; --bg-elevated:#ffffff;
+    --surface-glass: rgba(10,8,8,0.035); --surface-glass-strong: rgba(10,8,8,0.06);
+    --border-glass: rgba(10,8,8,0.09); --border-glass-strong: rgba(10,8,8,0.16);
+    --text:#111010; --text-dim: rgba(17,16,16,0.62); --text-faint: rgba(17,16,16,0.4);
+    --red:#b3122e; --red-bright:#d81b41; --red-glow: rgba(179,18,46,0.22);
+    --shadow: 0 20px 60px rgba(20,15,15,0.12);
+    color-scheme: light;
+  }
+}
+
+*{box-sizing:border-box; margin:0; padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Inter', sans-serif;
+  overflow-x:hidden;
+  transition:background .5s var(--ease), color .5s var(--ease);
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{ background:var(--red); color:#fff; }
+h1,h2,h3,.display{ font-family:'Space Grotesk', sans-serif; }
+.mono{ font-family:'JetBrains Mono', monospace; }
+a{ color:inherit; text-decoration:none; }
+button{ font-family:inherit; cursor:pointer; border:none; background:none; color:inherit; }
+ul{ list-style:none; }
+
+/* background texture */
+.bg-field{
+  position:fixed; inset:0; z-index:-2; pointer-events:none; overflow:hidden;
+}
+.bg-field::before{
+  content:''; position:absolute; inset:0;
+  background:
+    radial-gradient(ellipse 900px 600px at 18% 8%, var(--red-glow), transparent 60%),
+    radial-gradient(ellipse 700px 500px at 88% 92%, var(--red-glow), transparent 55%);
+  opacity:.55;
+  transition:opacity .5s var(--ease);
+}
+:root[data-theme="light"] .bg-field::before{ opacity:.35; }
+.bg-field::after{
+  content:''; position:absolute; inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.028'/%3E%3C/svg%3E");
+  mix-blend-mode:overlay;
+}
+
+/* cursor glow */
+.cursor-glow{
+  position:fixed; top:0; left:0; width:190px; height:190px;
+  border-radius:50%;
+  pointer-events:none; z-index:2;
+  background:radial-gradient(circle, var(--red-glow) 0%, transparent 68%);
+  transform:translate(-50%,-50%);
+  opacity:0;
+  transition:opacity .4s ease;
+  will-change:transform;
+}
+@media (hover:hover) and (pointer:fine){
+  .cursor-glow.active{ opacity:1; }
+}
+
+.cursor-arrow{
+  position:fixed; top:0; left:0; width:22px; height:22px;
+  pointer-events:none; z-index:150;
+  transform:translate(-4px,-2px);
+  opacity:0;
+  transition:opacity .3s ease, transform .05s linear;
+  will-change:transform;
+  filter:drop-shadow(0 2px 6px rgba(0,0,0,0.35));
+}
+.cursor-arrow.active{ opacity:1; }
+.cursor-arrow svg{ width:100%; height:100%; display:block; }
+@media (hover:hover) and (pointer:fine){
+  body{ cursor:none; }
+  a, button, .s-card, .quiz-opt, .role-pick-item, .check-item, input, textarea, select{ cursor:none; }
+}
+
+/* glass */
+.glass{
+  background:var(--surface-glass);
+  backdrop-filter:blur(20px) saturate(140%);
+  -webkit-backdrop-filter:blur(20px) saturate(140%);
+  border:1px solid var(--border-glass);
+  box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,0.03);
+}
+
+/* layout helpers */
+.wrap{ max-width:1200px; margin:0 auto; padding:0 28px; }
+.eyebrow{
+  font-family:'JetBrains Mono', monospace; font-size:11px; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--text-faint);
+}
+
+/* ============ NAV ============ */
+.nav{
+  position:fixed; top:18px; left:50%; transform:translateX(-50%);
+  z-index:100; width:min(920px, calc(100% - 32px));
+  display:flex; align-items:center; justify-content:space-between;
+  padding:12px 12px 12px 22px;
+  border-radius:100px;
+}
+.nav-logo{ font-weight:600; font-size:15px; letter-spacing:.01em; display:flex; align-items:center; gap:8px;}
+.nav-logo .dot{ width:6px; height:6px; border-radius:50%; background:var(--red-bright); box-shadow:0 0 10px var(--red-bright); }
+.nav-links{ display:flex; align-items:center; gap:2px; }
+.nav-links a{
+  font-size:13px; padding:9px 16px; border-radius:100px; color:var(--text-dim);
+  transition:color .25s var(--ease), background .25s var(--ease);
+  position:relative;
+}
+.nav-links a:hover{ color:var(--text); background:var(--surface-glass-strong); }
+.nav-links a.active{ color:var(--text); background:var(--surface-glass-strong); }
+.nav-links a.active::after{
+  content:''; position:absolute; bottom:6px; left:50%; transform:translateX(-50%);
+  width:4px; height:4px; border-radius:50%; background:var(--red-bright);
+}
+.nav-right{ display:flex; align-items:center; gap:8px; }
+.theme-toggle{
+  width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  border:1px solid var(--border-glass); background:var(--surface-glass); transition:all .3s var(--ease);
+}
+.theme-toggle:hover{ border-color:var(--border-glass-strong); transform:rotate(20deg); }
+.theme-toggle svg{ width:16px; height:16px; stroke:var(--text); fill:none; stroke-width:1.8; }
+.nav-cta{
+  padding:9px 18px; border-radius:100px; font-size:13px; font-weight:500;
+  background:var(--text); color:var(--bg);
+  transition:all .3s var(--ease);
+}
+.nav-cta:hover{ background:var(--red-bright); color:#fff; transform:scale(1.03); }
+.burger{ display:none; }
+@media (max-width:760px){
+  .nav-links{ display:none; }
+  .burger{ display:flex; width:36px; height:36px; border-radius:50%; align-items:center; justify-content:center; border:1px solid var(--border-glass); }
+  .burger svg{ width:16px; height:16px; stroke:var(--text); fill:none; stroke-width:1.8; }
+}
+.mobile-menu{
+  position:fixed; inset:0; z-index:99; background:var(--bg); opacity:0; pointer-events:none;
+  transition:opacity .35s var(--ease); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:28px;
+}
+.mobile-menu.open{ opacity:1; pointer-events:auto; }
+.mobile-menu a{ font-size:28px; font-family:'Space Grotesk'; }
+.mobile-menu .close-btn{ position:absolute; top:26px; right:26px; width:40px; height:40px; }
+
+/* ============ SCROLL PROGRESS ============ */
+.scroll-bar{ position:fixed; top:0; left:0; height:2px; background:var(--red-bright); z-index:200; width:0%; transition:width .1s linear; }
+
+/* ============ VIEWS ============ */
+.view{ display:none; }
+.view.active{ display:block; animation:viewIn .5s var(--ease); }
+@keyframes viewIn{ from{ opacity:0; transform:translateY(14px);} to{ opacity:1; transform:translateY(0);} }
+
+/* ============ HERO ============ */
+.hero{ padding:170px 0 90px; }
+.status-pill{
+  display:inline-flex; align-items:center; gap:9px; padding:8px 16px 8px 12px;
+  border-radius:100px; margin-bottom:40px;
+}
+.status-pill .pulse{ width:7px; height:7px; border-radius:50%; background:var(--red-bright); box-shadow:0 0 12px var(--red-bright); animation:pulse 2s infinite; }
+@keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
+.status-pill span{ font-family:'JetBrains Mono'; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--text-dim); }
+
+.hero-tag{ font-size:14px; color:var(--red-bright); font-weight:500; margin-bottom:18px; letter-spacing:.02em; }
+.hero h1{
+  font-size:clamp(52px, 9vw, 108px); line-height:.94; letter-spacing:-.03em; font-weight:600;
+  max-width:900px;
+}
+.hero h1 em{ font-style:normal; color:var(--text-faint); }
+.hero-sub{ margin-top:28px; font-size:18px; line-height:1.6; color:var(--text-dim); max-width:480px; }
+.hero-actions{ display:flex; align-items:center; gap:22px; margin-top:44px; flex-wrap:wrap; }
+
+.btn-primary{
+  display:inline-flex; align-items:center; gap:10px; padding:16px 26px; border-radius:100px;
+  background:var(--text); color:var(--bg); font-weight:500; font-size:14.5px;
+  transition:all .35s var(--ease); position:relative; overflow:hidden;
+}
+.btn-primary svg{ width:15px; height:15px; transition:transform .35s var(--ease); }
+.btn-primary:hover{ background:var(--red-bright); color:#fff; }
+.btn-primary:hover svg{ transform:translateX(4px); }
+
+.btn-ghost{
+  display:inline-flex; align-items:center; gap:8px; font-size:14px; color:var(--text-dim);
+  padding:14px 4px; border-bottom:1px solid transparent; transition:all .3s var(--ease);
+}
+.btn-ghost:hover{ color:var(--text); border-color:var(--border-glass-strong); }
+
+.hero-stats{ display:flex; gap:64px; margin-top:110px; flex-wrap:wrap; }
+.hero-stat b{ display:block; font-size:44px; font-weight:600; font-family:'Space Grotesk'; }
+.hero-stat span{ font-size:12px; color:var(--text-faint); font-family:'JetBrains Mono'; letter-spacing:.1em; text-transform:uppercase; }
+
+/* ============ SECTION HEADS ============ */
+.section{ padding:80px 0; }
+.section-head{ display:flex; align-items:flex-end; justify-content:space-between; gap:24px; margin-bottom:46px; flex-wrap:wrap; }
+.section-head h2{ font-size:clamp(30px,4vw,44px); font-weight:600; letter-spacing:-.02em; }
+.section-head p{ color:var(--text-dim); max-width:360px; font-size:14.5px; line-height:1.55; }
+
+/* ============ FILTERS ============ */
+.filters{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:36px; }
+.filter-btn{
+  padding:9px 18px; border-radius:100px; font-size:13px; border:1px solid var(--border-glass);
+  color:var(--text-dim); transition:all .3s var(--ease); background:transparent;
+}
+.filter-btn:hover{ border-color:var(--border-glass-strong); color:var(--text); }
+.filter-btn.active{ background:var(--text); color:var(--bg); border-color:var(--text); }
+
+/* ============ SOCIETY GRID ============ */
+.society-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:18px; }
+@media (max-width:920px){ .society-grid{ grid-template-columns:repeat(2,1fr); } }
+@media (max-width:620px){ .society-grid{ grid-template-columns:1fr; } }
+
+.s-card{
+  border-radius:var(--radius-lg); padding:26px; position:relative; overflow:hidden;
+  transition: transform .45s var(--ease), border-color .45s var(--ease), box-shadow .45s var(--ease);
+  cursor:pointer; display:flex; flex-direction:column; min-height:290px;
+}
+.s-card::before{
+  content:''; position:absolute; inset:0; opacity:0; transition:opacity .45s var(--ease);
+  background:radial-gradient(320px circle at var(--mx,50%) var(--my,0%), var(--red-glow), transparent 65%);
+  pointer-events:none;
+}
+.s-card:hover{ transform:translateY(-6px); border-color:var(--border-glass-strong); box-shadow:0 26px 70px rgba(0,0,0,0.4), 0 0 0 1px var(--red-glow); }
+.s-card:hover::before{ opacity:1; }
+.s-card-top{ display:flex; align-items:flex-start; justify-content:space-between; }
+.s-logo{
+  width:46px; height:46px; border-radius:12px; display:flex; align-items:center; justify-content:center;
+  background:var(--surface-glass-strong); border:1px solid var(--border-glass); font-size:19px;
+}
+.s-num{ font-family:'JetBrains Mono'; font-size:11px; color:var(--text-faint); }
+.s-cat{ font-size:10.5px; font-family:'JetBrains Mono'; letter-spacing:.1em; text-transform:uppercase; color:var(--red-bright); margin-top:18px; }
+.s-name{ font-size:22px; font-weight:600; margin-top:8px; letter-spacing:-.01em; line-height:1.15; }
+.s-tag{ font-size:13.5px; color:var(--text-dim); margin-top:10px; line-height:1.5; flex-grow:1; }
+.s-foot{ display:flex; align-items:center; justify-content:space-between; margin-top:22px; padding-top:16px; border-top:1px solid var(--border-glass); }
+.s-roles{ font-size:11.5px; color:var(--text-faint); font-family:'JetBrains Mono'; }
+.s-explore{ font-size:13px; display:flex; align-items:center; gap:6px; font-weight:500; }
+.s-explore svg{ width:13px; height:13px; transition:transform .3s var(--ease); }
+.s-card:hover .s-explore svg{ transform:translateX(3px); }
+
+/* ============ DETAIL ============ */
+.detail-back{ display:inline-flex; align-items:center; gap:8px; font-size:13px; color:var(--text-dim); margin-bottom:40px; transition:color .3s; }
+.detail-back:hover{ color:var(--text); }
+.detail-back svg{ width:13px; height:13px; }
+.detail-grid{ display:grid; grid-template-columns:1.1fr 1fr; gap:60px; align-items:start; }
+@media (max-width:880px){ .detail-grid{ grid-template-columns:1fr; gap:40px; } }
+.detail-visual{
+  aspect-ratio:1/1.05; border-radius:var(--radius-lg); display:flex; align-items:center; justify-content:center;
+  position:relative; overflow:hidden;
+}
+.detail-visual::before{ content:''; position:absolute; inset:0; background:radial-gradient(circle at 30% 20%, var(--red-glow), transparent 60%); }
+.detail-visual .glyph{ font-size:120px; opacity:.9; position:relative; }
+.detail-num{ font-family:'JetBrains Mono'; font-size:12px; color:var(--text-faint); margin-bottom:10px; }
+.detail-title{ font-size:clamp(34px,5vw,54px); font-weight:600; letter-spacing:-.02em; line-height:1.03; }
+.detail-quote{ font-size:18px; color:var(--text-dim); margin-top:18px; line-height:1.5; max-width:420px; }
+.detail-block{ margin-top:38px; }
+.detail-block h4{ font-size:11px; font-family:'JetBrains Mono'; letter-spacing:.12em; text-transform:uppercase; color:var(--text-faint); margin-bottom:12px; }
+.detail-block p{ font-size:15px; line-height:1.7; color:var(--text-dim); max-width:460px; }
+.role-list{ display:flex; flex-direction:column; gap:0; }
+.role-list li{ padding:13px 0; border-bottom:1px solid var(--border-glass); font-size:15px; display:flex; align-items:center; justify-content:space-between; }
+.role-list li:last-child{ border-bottom:none; }
+.role-list li span.tag{ font-size:11px; font-family:'JetBrains Mono'; color:var(--text-faint); }
+.crit-list{ font-size:14.5px; color:var(--text-dim); line-height:2; }
+.crit-list li::before{ content:'— '; color:var(--red-bright); }
+
+/* ============ APPLICATION FLOW ============ */
+.apply-wrap{ max-width:640px; margin:0 auto; }
+.apply-head{ text-align:center; margin-bottom:12px; }
+.apply-steps{ display:flex; justify-content:center; gap:8px; margin:26px 0 46px; }
+.apply-steps .step-dot{ width:28px; height:3px; border-radius:2px; background:var(--border-glass); transition:background .3s var(--ease); }
+.apply-steps .step-dot.done{ background:var(--red-bright); }
+.apply-card{ border-radius:var(--radius-lg); padding:44px; }
+.step-label{ font-family:'JetBrains Mono'; font-size:11px; letter-spacing:.1em; color:var(--red-bright); text-transform:uppercase; }
+.step-num{ font-size:13px; color:var(--text-faint); font-family:'JetBrains Mono'; margin-bottom:6px; display:block; }
+.step-title{ font-size:26px; font-weight:600; margin:8px 0 32px; letter-spacing:-.01em; }
+.field{ margin-bottom:22px; }
+.field label{ display:block; font-size:11px; font-family:'JetBrains Mono'; letter-spacing:.08em; text-transform:uppercase; color:var(--text-faint); margin-bottom:9px; }
+.field input, .field select, .field textarea{
+  width:100%; background:var(--surface-glass); border:1px solid var(--border-glass); border-radius:var(--radius-sm);
+  padding:13px 15px; color:var(--text); font-size:14.5px; font-family:'Inter'; transition:border-color .3s, background .3s;
+}
+.field input:focus, .field select:focus, .field textarea:focus{ outline:none; border-color:var(--red-bright); background:var(--surface-glass-strong); }
+.field textarea{ resize:vertical; min-height:110px; }
+.field.error input, .field.error textarea, .field.error select{ border-color:var(--red-bright); }
+.field-err{ font-size:12px; color:var(--red-bright); margin-top:7px; display:none; }
+.field.error .field-err{ display:block; }
+.check-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+@media (max-width:480px){ .check-grid{ grid-template-columns:1fr; } }
+.check-item{
+  display:flex; align-items:center; gap:10px; padding:12px 14px; border-radius:var(--radius-sm);
+  border:1px solid var(--border-glass); background:var(--surface-glass); font-size:13.5px; transition:all .25s var(--ease);
+}
+.check-item:hover{ border-color:var(--border-glass-strong); }
+.check-item input{ accent-color:var(--red-bright); width:15px; height:15px; }
+.check-item.checked{ border-color:var(--red-bright); background:var(--surface-glass-strong); }
+.role-pick{ display:flex; flex-direction:column; gap:10px; }
+.role-pick-item{
+  padding:14px 16px; border-radius:var(--radius-sm); border:1px solid var(--border-glass); background:var(--surface-glass);
+  font-size:14px; display:flex; justify-content:space-between; align-items:center; transition:all .25s var(--ease);
+}
+.role-pick-item:hover{ border-color:var(--border-glass-strong); }
+.role-pick-item.picked{ border-color:var(--red-bright); background:var(--surface-glass-strong); }
+.role-pick-item .dot-check{ width:15px; height:15px; border-radius:50%; border:1px solid var(--border-glass-strong); flex-shrink:0; position:relative; }
+.role-pick-item.picked .dot-check{ border-color:var(--red-bright); }
+.role-pick-item.picked .dot-check::after{ content:''; position:absolute; inset:3px; border-radius:50%; background:var(--red-bright); }
+.step-nav{ display:flex; justify-content:space-between; align-items:center; margin-top:36px; }
+.step-back{ font-size:13.5px; color:var(--text-dim); }
+.step-back:hover{ color:var(--text); }
+
+/* ============ SUCCESS ============ */
+.success-view{ min-height:80vh; display:flex; align-items:center; justify-content:center; text-align:center; padding:60px 0; }
+.success-inner{ max-width:440px; }
+.success-check{ width:64px; height:64px; margin:0 auto 30px; }
+.success-title{ font-size:clamp(34px,6vw,52px); font-weight:600; letter-spacing:-.02em; line-height:1.05; }
+.progress-track{ height:3px; border-radius:2px; background:var(--border-glass); margin:30px 0; overflow:hidden; }
+.progress-fill{ height:100%; width:0%; background:var(--red-bright); transition:width 1.4s var(--ease); }
+.check-lines{ text-align:left; display:inline-flex; flex-direction:column; gap:10px; margin:0 auto; }
+.check-lines li{ font-size:13.5px; font-family:'JetBrains Mono'; color:var(--text-faint); opacity:0; transform:translateX(-8px); transition:all .4s var(--ease); display:flex; align-items:center; gap:8px; }
+.check-lines li.show{ opacity:1; transform:translateX(0); color:var(--text-dim); }
+.check-lines li svg{ width:13px; height:13px; stroke:var(--red-bright); }
+.app-id{ margin-top:30px; padding:14px 22px; border-radius:100px; display:inline-block; font-family:'JetBrains Mono'; font-size:13px; letter-spacing:.05em; }
+.success-return{ margin-top:36px; }
+
+/* ============ QUIZ ============ */
+.quiz-card{ max-width:640px; margin:0 auto; border-radius:var(--radius-lg); padding:48px; min-height:380px; }
+.quiz-progress{ display:flex; gap:6px; margin-bottom:32px; }
+.quiz-progress span{ height:3px; flex:1; border-radius:2px; background:var(--border-glass); }
+.quiz-progress span.done{ background:var(--red-bright); }
+.quiz-q-num{ font-family:'JetBrains Mono'; font-size:12px; color:var(--text-faint); margin-bottom:10px; }
+.quiz-q{ font-size:26px; font-weight:600; margin-bottom:30px; letter-spacing:-.01em; }
+.quiz-opt{
+  display:flex; align-items:center; gap:14px; padding:16px 18px; border-radius:var(--radius-sm);
+  border:1px solid var(--border-glass); margin-bottom:10px; transition:all .25s var(--ease); font-size:14.5px;
+}
+.quiz-opt:hover{ border-color:var(--border-glass-strong); background:var(--surface-glass-strong); }
+.quiz-opt .ring{ width:16px; height:16px; border-radius:50%; border:1px solid var(--border-glass-strong); flex-shrink:0; }
+.quiz-result-tag{ font-family:'JetBrains Mono'; font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--red-bright); margin-bottom:14px; }
+.quiz-result-title{ font-size:clamp(30px,5vw,44px); font-weight:600; margin-bottom:14px; letter-spacing:-.02em; }
+.quiz-result-desc{ font-size:15.5px; color:var(--text-dim); line-height:1.6; max-width:420px; margin-bottom:34px; }
+.quiz-matches{ display:flex; flex-direction:column; gap:10px; }
+
+/* ============ CAMPUS ============ */
+.campus{ position:relative; border-radius:var(--radius-lg); padding:60px 40px; overflow:hidden; text-align:center; }
+.campus-map{ width:100%; max-width:560px; margin:40px auto 0; opacity:.85; }
+.campus-map path, .campus-map line, .campus-map circle{ stroke:var(--text-faint); }
+.campus-map circle.hot{ fill:var(--red-bright); stroke:none; }
+
+/* ============ FOOTER ============ */
+footer{ padding:60px 0 40px; border-top:1px solid var(--border-glass); margin-top:60px; }
+.footer-top{ display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:30px; margin-bottom:50px; }
+.footer-brand{ font-size:20px; font-weight:600; }
+.footer-links{ display:flex; gap:36px; flex-wrap:wrap; }
+.footer-links a{ font-size:13.5px; color:var(--text-dim); }
+.footer-links a:hover{ color:var(--text); }
+.footer-bottom{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; padding-top:24px; border-top:1px solid var(--border-glass); }
+.footer-credit{ font-family:'JetBrains Mono'; font-size:12px; color:var(--text-faint); letter-spacing:.02em; }
+.footer-credit b{ color:var(--text-dim); font-weight:500; }
+.footer-meta{ font-family:'JetBrains Mono'; font-size:11.5px; color:var(--text-faint); }
+
+/* focus states */
+a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible{
+  outline:2px solid var(--red-bright); outline-offset:2px; border-radius:4px;
+}
+
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration:0.001ms !important; transition-duration:0.001ms !important; scroll-behavior:auto !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="bg-field"></div>
+<div class="cursor-glow" id="cursorGlow"></div>
+<div class="cursor-arrow" id="cursorArrow">
+  <svg viewBox="0 0 100 100" fill="none">
+    <path d="M12 6 L92 46 L52 50 L34 94 Z" stroke="var(--red-bright)" stroke-width="9" stroke-linejoin="round" stroke-linecap="round" fill="var(--bg)"/>
+  </svg>
+</div>
+<div class="scroll-bar" id="scrollBar"></div>
+
+<nav class="nav glass">
+  <a href="#/" class="nav-logo"><span class="dot"></span> GDG // NSUT</a>
+  <div class="nav-links" id="navLinks">
+    <a href="#/societies" data-route="societies">Societies</a>
+    <a href="#/quiz" data-route="quiz">Find Yours</a>
+    <a href="#/about" data-route="about">About</a>
+  </div>
+  <div class="nav-right">
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+      <svg id="themeIcon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+    </button>
+    <a href="#/apply" class="nav-cta">Apply</a>
+    <button class="burger" id="burgerBtn" aria-label="Menu">
+      <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+  </div>
+</nav>
+
+<div class="mobile-menu" id="mobileMenu">
+  <button class="close-btn theme-toggle" id="closeMobile" aria-label="Close menu">
+    <svg viewBox="0 0 24 24" stroke="currentColor" style="stroke:var(--text)"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg>
+  </button>
+  <a href="#/societies">Societies</a>
+  <a href="#/quiz">Find Yours</a>
+  <a href="#/about">About</a>
+  <a href="#/apply">Apply</a>
+</div>
+
+<main class="wrap">
+
+  <!-- HOME -->
+  <section class="view active" id="view-home">
+    <div class="hero">
+      <div class="status-pill glass">
+        <span class="pulse"></span>
+        <span>Recruitment Portal Online · Applications Open · NSUT 2026</span>
+      </div>
+      <div class="hero-tag">GDG // NSUT · Society Recruitment 2026</div>
+      <h1>Find your<br><em>people.</em></h1>
+      <p class="hero-sub">Six societies. One platform. Explore where you belong, then build something worth remembering.</p>
+      <div class="hero-actions">
+        <a href="#/societies" class="btn-primary">Explore Societies
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+        <a href="#/quiz" class="btn-ghost">Not sure yet? Take the quiz →</a>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat"><b>06</b><span>Societies</span></div>
+        <div class="hero-stat"><b>04</b><span>Categories</span></div>
+        <div class="hero-stat"><b>∞</b><span>Possibilities</span></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head">
+        <h2>This year's lineup.</h2>
+        <p>Every society, one line each. Full detail is one click away.</p>
+      </div>
+      <div class="society-grid" id="homePreviewGrid"></div>
+    </div>
+
+    <div class="section campus glass">
+      <div class="eyebrow">Campus Mode</div>
+      <h2 style="font-size:clamp(28px,4vw,42px); margin-top:14px; font-weight:600;">Where the chaos happens.</h2>
+      <svg class="campus-map" viewBox="0 0 560 220" fill="none" stroke-width="1.2">
+        <line x1="30" y1="110" x2="530" y2="110"/>
+        <line x1="120" y1="20" x2="120" y2="200"/>
+        <line x1="280" y1="20" x2="280" y2="200"/>
+        <line x1="440" y1="20" x2="440" y2="200"/>
+        <circle class="hot" cx="120" cy="110" r="5"/>
+        <circle class="hot" cx="280" cy="60" r="5"/>
+        <circle class="hot" cx="440" cy="150" r="5"/>
+        <circle cx="60" cy="60" r="3"/>
+        <circle cx="360" cy="170" r="3"/>
+      </svg>
+    </div>
+  </section>
+
+  <!-- SOCIETIES -->
+  <section class="view" id="view-societies">
+    <div class="hero" style="padding-top:150px; padding-bottom:20px;">
+      <div class="hero-tag">Society Explorer</div>
+      <h1 style="font-size:clamp(38px,6vw,64px);">Explore the<br><em>societies.</em></h1>
+    </div>
+    <div class="section" style="padding-top:20px;">
+      <div class="filters" id="filterBar"></div>
+      <div class="society-grid" id="societyGrid"></div>
+    </div>
+  </section>
+
+  <!-- DETAIL -->
+  <section class="view" id="view-detail">
+    <div style="padding-top:150px;">
+      <a href="#/societies" class="detail-back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        Back to societies
+      </a>
+      <div class="detail-grid" id="detailContent"></div>
+    </div>
+  </section>
+
+  <!-- APPLY -->
+  <section class="view" id="view-apply">
+    <div style="padding-top:150px;">
+      <div class="apply-wrap">
+        <div class="apply-head">
+          <div class="eyebrow">Application // GDG-2026</div>
+        </div>
+        <div class="apply-steps" id="applySteps"></div>
+        <div class="apply-card glass" id="applyCard"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SUCCESS -->
+  <section class="view" id="view-success">
+    <div class="success-view">
+      <div class="success-inner">
+        <svg class="success-check" viewBox="0 0 64 64" fill="none">
+          <circle cx="32" cy="32" r="30" stroke="var(--red-bright)" stroke-width="1.5"/>
+          <path d="M20 33l8 8 16-17" stroke="var(--red-bright)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" id="checkPath"/>
+        </svg>
+        <div class="eyebrow">Application</div>
+        <h1 class="success-title">Transmitted.</h1>
+        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+        <ul class="check-lines" id="checkLines">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg> Profile created</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg> Application received</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg> Data validated</li>
+        </ul>
+        <br>
+        <div class="app-id glass" id="appIdBox"></div>
+        <div class="success-return">
+          <a href="#/societies" class="btn-ghost">Return to societies →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUIZ -->
+  <section class="view" id="view-quiz">
+    <div style="padding-top:150px; padding-bottom:60px;">
+      <div class="hero-tag" style="text-align:center;">Find Your Society</div>
+      <h1 style="font-size:clamp(30px,5vw,46px); text-align:center; margin-bottom:44px;">What kind of person are you?</h1>
+      <div class="quiz-card glass" id="quizCard"></div>
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section class="view" id="view-about">
+    <div class="hero" style="padding-top:150px;">
+      <div class="hero-tag">About</div>
+      <h1 style="font-size:clamp(34px,6vw,60px);">One portal.<br><em>Every society.</em></h1>
+      <p class="hero-sub" style="max-width:560px;">Society OS replaces six separate sign-up forms, six separate Google Forms links, and six different deadlines with one place. Browse, compare, and apply — all recruitment data lands in one system, reviewed by one committee.</p>
+      <div class="hero-actions">
+        <a href="#/societies" class="btn-primary">Start exploring
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-top">
+      <div class="footer-brand">GDG // NSUT</div>
+      <div class="footer-links">
+        <a href="#/societies">Societies</a>
+        <a href="#/quiz">Find Yours</a>
+        <a href="#/apply">Apply</a>
+        <a href="#/about">About</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="footer-credit">Made by <b>Kaushal</b> · Roll No — 2026UGI7202</div>
+      <div class="footer-meta">NSUT · Society OS · 2026</div>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+"use strict";
+
+/* ============ DATA ============ */
+const SOCIETIES = [
+  { id:"gdg", num:"01", cat:"TECHNICAL", logo:"◆", name:"GDG on Campus — NSUT", tag:"Where broken code becomes better thinking.",
+    desc:"The developer community building with Google technologies — Android, Web, Cloud, and AI/ML. We run build-a-thons, study jams, and ship real projects, not just certificates.",
+    roles:[["Frontend Developer","Web"],["Backend Developer","Cloud"],["ML Engineer","AI/ML"],["Technical Writer","Docs"],["Event Lead","Ops"]],
+    criteria:["Comfortable breaking things and fixing them","A GitHub profile that isn't empty","Curiosity that outlasts a tutorial"] },
+  { id:"robotics", num:"02", cat:"TECHNICAL", logo:"⬢", name:"Robotics & AI Society", tag:"Machines that argue back.",
+    desc:"From line-following bots to autonomous drones — we design, build, and break hardware. Open to anyone who'd rather solder than sleep.",
+    roles:[["Hardware Engineer","Electronics"],["Embedded Dev","Firmware"],["CAD Designer","Design"],["Team Lead","Ops"]],
+    criteria:["Basic electronics or willingness to learn fast","Patience for things that don't work the first time","A working knowledge of Ohm's law helps"] },
+  { id:"kalakriti", num:"03", cat:"CULTURAL", logo:"▲", name:"Kalakriti — Fine Arts Society", tag:"Colour is an argument.",
+    desc:"Canvas, charcoal, digital and everything between. Kalakriti runs campus murals, exhibitions, and the annual art fest — built entirely by students.",
+    roles:[["Visual Artist","Art"],["Curator","Exhibitions"],["Social Media","Content"],["Mural Lead","Public Art"]],
+    criteria:["A portfolio, even an unfinished one","Willingness to work on a deadline","An eye, not necessarily formal training"] },
+  { id:"euphony", num:"04", cat:"CULTURAL", logo:"♪", name:"Euphony — Music Society", tag:"Rehearsal is the real performance.",
+    desc:"NSUT's official music collective — vocals, instrumentals, production. We perform at every major fest and run open jam sessions monthly.",
+    roles:[["Vocalist","Performance"],["Instrumentalist","Performance"],["Producer","Studio"],["Sound Engineer","Live"]],
+    criteria:["Can hold a rhythm or a note","Available for weekly rehearsals","Genre doesn't matter, commitment does"] },
+  { id:"sports", num:"05", cat:"SPORTS", logo:"●", name:"Sports Council — NSUT", tag:"The scoreboard doesn't lie.",
+    desc:"Governing body for every inter-college sporting event NSUT competes in. We manage teams across 14 disciplines, from cricket to chess.",
+    roles:[["Team Captain","Leadership"],["Fitness Coordinator","Ops"],["Event Manager","Logistics"],["Player","Any discipline"]],
+    criteria:["Prior competitive experience preferred, not required","Reliability — practice attendance matters","A discipline you actually want to commit to"] },
+  { id:"wordsmiths", num:"06", cat:"LITERARY", logo:"§", name:"Wordsmiths — Literary Society", tag:"Argue about why your idea is better.",
+    desc:"Debate, quizzing, creative writing, and NSUT's literary fest. We've sent teams to national-level parliamentary debate circuits three years running.",
+    roles:[["Debater","Debate"],["Quizzer","Quiz"],["Editor","Publication"],["Content Writer","Publication"]],
+    criteria:["Can construct an argument under pressure","Reads — anything, regularly","Comfortable losing a round and coming back"] },
+];
+
+const CATEGORIES = ["ALL","TECHNICAL","CULTURAL","SPORTS","LITERARY"];
+
+const QUIZ = [
+  { q:"You'd rather...", opts:[
+    {t:"Build something at 3 AM", type:"creator"},
+    {t:"Organise the biggest event on campus", type:"organiser"},
+    {t:"Shoot & edit something cinematic", type:"artist"},
+    {t:"Argue about why your idea is better", type:"debater"} ] },
+  { q:"Pick a Sunday.", opts:[
+    {t:"Debugging a personal project", type:"creator"},
+    {t:"Planning next week down to the minute", type:"organiser"},
+    {t:"In a gallery, museum, or with a sketchbook", type:"artist"},
+    {t:"Reading something you'll argue about later", type:"debater"} ] },
+  { q:"Your group project role, honestly.", opts:[
+    {t:"The one who actually builds the thing", type:"creator"},
+    {t:"The one keeping everyone on schedule", type:"organiser"},
+    {t:"The one making it look good", type:"artist"},
+    {t:"The one presenting and defending it", type:"debater"} ] },
+  { q:"A compliment you'd actually want.", opts:[
+    {t:"\"That's a clever solution.\"", type:"creator"},
+    {t:"\"You made that look effortless.\"", type:"organiser"},
+    {t:"\"That gave me chills.\"", type:"artist"},
+    {t:"\"You changed my mind.\"", type:"debater"} ] },
+];
+
+const PROFILES = {
+  creator:{ title:"The Creator", desc:"You thrive where ideas become tangible — code, circuits, or otherwise.", matches:["gdg","robotics"] },
+  organiser:{ title:"The Organiser", desc:"You make chaos look like a schedule. Events don't run without people like you.", matches:["sports","gdg"] },
+  artist:{ title:"The Artist", desc:"You think in colour, sound, and frame. If it isn't beautiful, it isn't finished.", matches:["kalakriti","euphony"] },
+  debater:{ title:"The Debater", desc:"You read the room, then argue it out of its own conclusion.", matches:["wordsmiths","sports"] },
+};
+
+/* ============ STATE ============ */
+let state = { filter:"ALL", applyStep:0, applyData:{ name:"", year:"1st Year", branch:"", society:null, role:null, why:"", skills:[] }, quizIdx:0, quizAnswers:[] };
+
+/* ============ THEME ============ */
+const root = document.documentElement;
+function setTheme(t){
+  root.setAttribute("data-theme", t);
+  try{ localStorage.setItem("gdg-theme", t); }catch(e){}
+  const icon = document.getElementById("themeIcon");
+  icon.innerHTML = t === "light"
+    ? '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>'
+    : '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>';
+}
+(function initTheme(){
+  let saved = null;
+  try{ saved = localStorage.getItem("gdg-theme"); }catch(e){}
+  if(saved){ setTheme(saved); }
+  else{
+    const prefersLight = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches;
+    setTheme(prefersLight ? "light" : "dark");
+  }
+})();
+document.getElementById("themeToggle").addEventListener("click", ()=>{
+  setTheme(root.getAttribute("data-theme") === "light" ? "dark" : "light");
+});
+
+/* ============ CURSOR GLOW ============ */
+const glow = document.getElementById("cursorGlow");
+const arrowCursor = document.getElementById("cursorArrow");
+let hasFine = window.matchMedia && window.matchMedia("(hover:hover) and (pointer:fine)").matches;
+if(hasFine){
+  window.addEventListener("mousemove", (e)=>{
+    glow.style.transform = `translate(${e.clientX}px, ${e.clientY}px) translate(-50%,-50%)`;
+    glow.classList.add("active");
+    arrowCursor.style.transform = `translate(${e.clientX}px, ${e.clientY}px) translate(-4px,-2px)`;
+    arrowCursor.classList.add("active");
+  });
+  window.addEventListener("mouseleave", ()=>{ glow.classList.remove("active"); arrowCursor.classList.remove("active"); });
+}
+
+/* card-local glow position */
+document.addEventListener("mousemove", (e)=>{
+  const card = e.target.closest && e.target.closest(".s-card");
+  if(card){
+    const r = card.getBoundingClientRect();
+    card.style.setProperty("--mx", ((e.clientX - r.left)/r.width*100)+"%");
+    card.style.setProperty("--my", ((e.clientY - r.top)/r.height*100)+"%");
+  }
+});
+
+/* ============ SCROLL PROGRESS ============ */
+window.addEventListener("scroll", ()=>{
+  const h = document.documentElement;
+  const pct = (h.scrollTop) / (h.scrollHeight - h.clientHeight) * 100;
+  document.getElementById("scrollBar").style.width = (pct||0)+"%";
+});
+
+/* ============ MOBILE MENU ============ */
+const mobileMenu = document.getElementById("mobileMenu");
+document.getElementById("burgerBtn").addEventListener("click", ()=> mobileMenu.classList.add("open"));
+document.getElementById("closeMobile").addEventListener("click", ()=> mobileMenu.classList.remove("open"));
+mobileMenu.querySelectorAll("a").forEach(a=> a.addEventListener("click", ()=> mobileMenu.classList.remove("open")));
+
+/* ============ RENDER: CARDS ============ */
+function cardHTML(s){
+  return `<div class="s-card glass" data-id="${s.id}" role="button" tabindex="0" aria-label="View ${s.name}">
+    <div class="s-card-top">
+      <div class="s-logo">${s.logo}</div>
+      <div class="s-num mono">${s.num} / 06</div>
+    </div>
+    <div class="s-cat mono">${s.cat}</div>
+    <div class="s-name">${s.name}</div>
+    <div class="s-tag">${s.tag}</div>
+    <div class="s-foot">
+      <div class="s-roles">${s.roles.length} OPEN ROLES</div>
+      <div class="s-explore">Explore
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </div>
+    </div>
+  </div>`;
+}
+function bindCards(container){
+  container.querySelectorAll(".s-card").forEach(c=>{
+    c.addEventListener("click", ()=> location.hash = "#/society/"+c.dataset.id);
+    c.addEventListener("keydown", (e)=>{ if(e.key==="Enter") location.hash = "#/society/"+c.dataset.id; });
+  });
+}
+
+document.getElementById("homePreviewGrid").innerHTML = SOCIETIES.map(cardHTML).join("");
+bindCards(document.getElementById("homePreviewGrid"));
+
+/* ============ RENDER: FILTERS + SOCIETIES ============ */
+const filterBar = document.getElementById("filterBar");
+filterBar.innerHTML = CATEGORIES.map(c=> `<button class="filter-btn${c===state.filter?" active":""}" data-cat="${c}">${c}</button>`).join("");
+function renderSocietyGrid(){
+  const grid = document.getElementById("societyGrid");
+  const list = state.filter==="ALL" ? SOCIETIES : SOCIETIES.filter(s=>s.cat===state.filter);
+  grid.innerHTML = list.map(cardHTML).join("");
+  bindCards(grid);
+}
+filterBar.addEventListener("click", (e)=>{
+  const btn = e.target.closest(".filter-btn");
+  if(!btn) return;
+  state.filter = btn.dataset.cat;
+  filterBar.querySelectorAll(".filter-btn").forEach(b=> b.classList.toggle("active", b===btn));
+  renderSocietyGrid();
+});
+renderSocietyGrid();
+
+/* ============ RENDER: DETAIL ============ */
+function renderDetail(id){
+  const s = SOCIETIES.find(x=>x.id===id);
+  const container = document.getElementById("detailContent");
+  if(!s){ container.innerHTML = "<p>Society not found.</p>"; return; }
+  container.innerHTML = `
+    <div class="detail-visual glass"><span class="glyph">${s.logo}</span></div>
+    <div>
+      <div class="eyebrow">${s.cat}</div>
+      <div class="detail-num mono">${s.num} / 06</div>
+      <h1 class="detail-title">${s.name}</h1>
+      <p class="detail-quote">"${s.tag}"</p>
+      <div class="detail-block">
+        <h4>About</h4>
+        <p>${s.desc}</p>
+      </div>
+      <div class="detail-block">
+        <h4>Open Roles</h4>
+        <ul class="role-list">${s.roles.map(r=>`<li>${r[0]} <span class="tag mono">${r[1]}</span></li>`).join("")}</ul>
+      </div>
+      <div class="detail-block">
+        <h4>Recruitment Criteria</h4>
+        <ul class="crit-list">${s.criteria.map(c=>`<li>${c}</li>`).join("")}</ul>
+      </div>
+      <div class="detail-block">
+        <a href="#/apply?society=${s.id}" class="btn-primary">Apply Now
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+      </div>
+    </div>`;
+}
+
+/* ============ APPLICATION FLOW ============ */
+const STEP_COUNT = 4;
+function renderApplySteps(){
+  const el = document.getElementById("applySteps");
+  el.innerHTML = "";
+  for(let i=0;i<STEP_COUNT;i++){
+    const d = document.createElement("div");
+    d.className = "step-dot" + (i<=state.applyStep ? " done" : "");
+    el.appendChild(d);
+  }
+}
+function validateStep(){
+  const card = document.getElementById("applyCard");
+  let ok = true;
+  if(state.applyStep===0){
+    const nameField = card.querySelector('[data-field="name"]');
+    const branchField = card.querySelector('[data-field="branch"]');
+    nameField.classList.toggle("error", !state.applyData.name.trim());
+    branchField.classList.toggle("error", !state.applyData.branch.trim());
+    if(!state.applyData.name.trim() || !state.applyData.branch.trim()) ok = false;
+  }
+  if(state.applyStep===1){
+    if(!state.applyData.society || !state.applyData.role) ok = false;
+    card.querySelector(".role-pick-wrap")?.classList.toggle("error-hint", !ok);
+    if(!ok){
+      let hint = card.querySelector(".field-err.role-err");
+      if(hint) hint.style.display = "block";
+    }
+  }
+  if(state.applyStep===2){
+    const whyField = card.querySelector('[data-field="why"]');
+    whyField.classList.toggle("error", state.applyData.why.trim().length < 10);
+    if(state.applyData.why.trim().length < 10) ok = false;
+  }
+  return ok;
+}
+function renderApplyStep(){
+  renderApplySteps();
+  const card = document.getElementById("applyCard");
+  const d = state.applyData;
+  if(state.applyStep===0){
+    card.innerHTML = `
+      <span class="step-num mono">01 / 04</span>
+      <div class="step-title">Identity</div>
+      <div class="field" data-field="name">
+        <label>Name</label>
+        <input type="text" id="fName" value="${d.name}" placeholder="Your full name">
+        <div class="field-err">Name is required.</div>
+      </div>
+      <div class="field">
+        <label>Year</label>
+        <select id="fYear">
+          ${["1st Year","2nd Year","3rd Year","4th Year"].map(y=>`<option ${d.year===y?"selected":""}>${y}</option>`).join("")}
+        </select>
+      </div>
+      <div class="field" data-field="branch">
+        <label>Branch</label>
+        <input type="text" id="fBranch" value="${d.branch}" placeholder="e.g. Computer Science">
+        <div class="field-err">Branch is required.</div>
+      </div>
+      <div class="step-nav"><span></span>
+        <button class="btn-primary" id="nextBtn">Continue
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+      </div>`;
+    card.querySelector("#fName").addEventListener("input", e=> d.name = e.target.value);
+    card.querySelector("#fBranch").addEventListener("input", e=> d.branch = e.target.value);
+    card.querySelector("#fYear").addEventListener("change", e=> d.year = e.target.value);
+  }
+  else if(state.applyStep===1){
+    card.innerHTML = `
+      <span class="step-num mono">02 / 04</span>
+      <div class="step-title">Your Role</div>
+      <div class="field">
+        <label>Society</label>
+        <select id="fSociety">
+          <option value="">Select a society</option>
+          ${SOCIETIES.map(s=>`<option value="${s.id}" ${d.society===s.id?"selected":""}>${s.name}</option>`).join("")}
+        </select>
+      </div>
+      <div class="field role-pick-wrap">
+        <label>Role</label>
+        <div class="role-pick" id="rolePick"></div>
+        <div class="field-err role-err">Pick a society and a role to continue.</div>
+      </div>
+      <div class="step-nav">
+        <button class="step-back" id="backBtn">← Back</button>
+        <button class="btn-primary" id="nextBtn">Continue
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+      </div>`;
+    function renderRoles(){
+      const s = SOCIETIES.find(x=>x.id===d.society);
+      const wrap = card.querySelector("#rolePick");
+      if(!s){ wrap.innerHTML = `<p style="color:var(--text-faint); font-size:13px;">Choose a society first.</p>`; return; }
+      wrap.innerHTML = s.roles.map(r=>`<div class="role-pick-item${d.role===r[0]?" picked":""}" data-role="${r[0]}"><span>${r[0]}</span><span class="dot-check"></span></div>`).join("");
+      wrap.querySelectorAll(".role-pick-item").forEach(el=>{
+        el.addEventListener("click", ()=>{ d.role = el.dataset.role; renderRoles(); });
+      });
+    }
+    renderRoles();
+    card.querySelector("#fSociety").addEventListener("change", e=>{ d.society = e.target.value || null; d.role = null; renderRoles(); });
+  }
+  else if(state.applyStep===2){
+    card.innerHTML = `
+      <span class="step-num mono">03 / 04</span>
+      <div class="step-title">Why You?</div>
+      <div class="field" data-field="why">
+        <label>Tell us in a few lines</label>
+        <textarea id="fWhy" placeholder="What makes you a fit for this society?">${d.why}</textarea>
+        <div class="field-err">Give us at least a couple of sentences.</div>
+      </div>
+      <div class="step-nav">
+        <button class="step-back" id="backBtn">← Back</button>
+        <button class="btn-primary" id="nextBtn">Continue
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+      </div>`;
+    card.querySelector("#fWhy").addEventListener("input", e=> d.why = e.target.value);
+  }
+  else if(state.applyStep===3){
+    const skills = ["Development","Design","Video Editing","Photography","Social Media","Writing"];
+    card.innerHTML = `
+      <span class="step-num mono">04 / 04</span>
+      <div class="step-title">What Do You Bring?</div>
+      <div class="field">
+        <div class="check-grid" id="skillGrid">
+          ${skills.map(sk=>`<label class="check-item${d.skills.includes(sk)?" checked":""}"><input type="checkbox" value="${sk}" ${d.skills.includes(sk)?"checked":""}> ${sk}</label>`).join("")}
+        </div>
+      </div>
+      <div class="step-nav">
+        <button class="step-back" id="backBtn">← Back</button>
+        <button class="btn-primary" id="submitBtn">Submit Application
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+      </div>`;
+    card.querySelectorAll('#skillGrid input').forEach(cb=>{
+      cb.addEventListener("change", ()=>{
+        if(cb.checked) d.skills.push(cb.value); else d.skills = d.skills.filter(s=>s!==cb.value);
+        cb.closest(".check-item").classList.toggle("checked", cb.checked);
+      });
+    });
+    card.querySelector("#submitBtn").addEventListener("click", submitApplication);
+  }
+  const backBtn = card.querySelector("#backBtn");
+  if(backBtn) backBtn.addEventListener("click", ()=>{ state.applyStep--; renderApplyStep(); });
+  const nextBtn = card.querySelector("#nextBtn");
+  if(nextBtn) nextBtn.addEventListener("click", ()=>{ if(validateStep()){ state.applyStep++; renderApplyStep(); } });
+}
+function submitApplication(){
+  const id = "GDG-26-" + Math.random().toString(16).slice(2,6).toUpperCase();
+  document.getElementById("appIdBox").innerHTML = `APPLICATION ID<br><b style="font-size:15px; color:var(--text)">${id}</b>`;
+  location.hash = "#/success";
+  setTimeout(()=>{
+    document.getElementById("progressFill").style.width = "100%";
+    document.querySelectorAll("#checkLines li").forEach((li,i)=> setTimeout(()=> li.classList.add("show"), 300 + i*260));
+  }, 150);
+  // reset for next time
+  state.applyStep = 0;
+  state.applyData = { name:"", year:"1st Year", branch:"", society:null, role:null, why:"", skills:[] };
+}
+
+/* ============ QUIZ ============ */
+function renderQuiz(){
+  const card = document.getElementById("quizCard");
+  if(state.quizIdx >= QUIZ.length){ renderQuizResult(); return; }
+  const q = QUIZ[state.quizIdx];
+  card.innerHTML = `
+    <div class="quiz-progress">${QUIZ.map((_,i)=>`<span class="${i<state.quizIdx?"done":""}"></span>`).join("")}</div>
+    <div class="quiz-q-num mono">${String(state.quizIdx+1).padStart(2,"0")} / ${String(QUIZ.length).padStart(2,"0")}</div>
+    <div class="quiz-q">${q.q}</div>
+    <div id="quizOpts">${q.opts.map((o,i)=>`<div class="quiz-opt" data-type="${o.type}"><span class="ring"></span>${o.t}</div>`).join("")}</div>`;
+  card.querySelectorAll(".quiz-opt").forEach(el=>{
+    el.addEventListener("click", ()=>{
+      state.quizAnswers.push(el.dataset.type);
+      state.quizIdx++;
+      renderQuiz();
+    });
+  });
+}
+function renderQuizResult(){
+  const counts = {};
+  state.quizAnswers.forEach(t=> counts[t] = (counts[t]||0)+1);
+  const winner = Object.keys(counts).reduce((a,b)=> counts[a]>=counts[b]?a:b, "creator");
+  const profile = PROFILES[winner];
+  const card = document.getElementById("quizCard");
+  card.innerHTML = `
+    <div class="quiz-result-tag mono">Your Profile</div>
+    <div class="quiz-result-title">${profile.title}</div>
+    <div class="quiz-result-desc">"${profile.desc}"</div>
+    <div class="quiz-matches" id="quizMatches"></div>
+    <div class="step-nav" style="margin-top:30px;">
+      <button class="step-back" id="retakeBtn">↻ Retake quiz</button>
+      <span></span>
+    </div>`;
+  const matches = profile.matches.map(id=> SOCIETIES.find(s=>s.id===id)).filter(Boolean);
+  card.querySelector("#quizMatches").innerHTML = matches.map(s=>cardHTML(s)).join("");
+  card.querySelector("#quizMatches").style.display = "grid";
+  card.querySelector("#quizMatches").style.gridTemplateColumns = "1fr 1fr";
+  card.querySelector("#quizMatches").style.gap = "12px";
+  bindCards(card.querySelector("#quizMatches"));
+  card.querySelector("#retakeBtn").addEventListener("click", ()=>{ state.quizIdx=0; state.quizAnswers=[]; renderQuiz(); });
+}
+
+/* ============ ROUTER ============ */
+const views = {
+  "": "view-home",
+  "societies": "view-societies",
+  "apply": "view-apply",
+  "success": "view-success",
+  "quiz": "view-quiz",
+  "about": "view-about",
+};
+function route(){
+  const hash = location.hash.replace(/^#\//,"");
+  const [pathPart, queryPart] = hash.split("?");
+  const parts = pathPart.split("/").filter(Boolean);
+  let viewId;
+
+  if(parts[0]==="society" && parts[1]){
+    viewId = "view-detail";
+    renderDetail(parts[1]);
+  } else {
+    viewId = views[parts[0]||""] || "view-home";
+  }
+
+  document.querySelectorAll(".view").forEach(v=> v.classList.toggle("active", v.id===viewId));
+
+  document.querySelectorAll(".nav-links a").forEach(a=> a.classList.toggle("active", a.dataset.route===parts[0]));
+
+  if(viewId==="view-apply"){
+    if(queryPart){
+      const params = new URLSearchParams(queryPart);
+      const soc = params.get("society");
+      if(soc) state.applyData.society = soc;
+    }
+    state.applyStep = 0;
+    renderApplyStep();
+  }
+  if(viewId==="view-quiz"){
+    state.quizIdx = 0; state.quizAnswers = [];
+    renderQuiz();
+  }
+  window.scrollTo({top:0, behavior:"auto"});
+}
+window.addEventListener("hashchange", route);
+route();
+
+})();
+</script>
+</body>
+</html>
